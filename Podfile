@@ -6,6 +6,6 @@ target 'FirebaseAuthSample' do
   use_frameworks!
 
   pod 'Firebase/Auth'
-  # Pods for FirebaseAuthSample
+  pod 'GoogleSignIn'
 
 end
