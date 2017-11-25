@@ -11,14 +11,13 @@ import FirebaseAuth
 import GoogleSignIn
 
 class ViewController: UIViewController {
-    @IBOutlet weak var googleSignInButton: GIDSignInButton!
     private var handler: FIRAuthStateDidChangeListenerHandle?
 
     override func viewDidLoad() {
         super.viewDidLoad()
         
         GIDSignIn.sharedInstance().uiDelegate = self
-        GIDSignIn.sharedInstance().signIn()
+        GIDSignIn.sharedInstance().delegate = self
     }
     
     
@@ -26,28 +25,46 @@ class ViewController: UIViewController {
         super.viewWillAppear(animated)
         
         let user = FIRAuth.auth()?.currentUser
-        print(user)
-
-//        handler = FIRAuth.auth()?.addStateDidChangeListener { (auth, user) in
-//            if let user = user {
-//                print("User is signed in with uid:", user.uid)
-//            } else {
-//                print("No user is signed in.")
-//            }
-//        }
+        if let user = user {
+            print(user.uid)
+            print(user.email ?? "")
+            print(user.photoURL ?? "")
+        }
     }
     
     
-    override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-        
-//        if let handler = handler {
-//            FIRAuth.auth()?.removeStateDidChangeListener(handler)
-//        }
+    @IBAction func didTapLogoutButton(_ sender: Any) {
+        try! FIRAuth.auth()?.signOut()
     }
 }
 
-extension ViewController: GIDSignInUIDelegate {
+
+extension ViewController: GIDSignInDelegate {
+    func sign(_ signIn: GIDSignIn!, didSignInFor user: GIDGoogleUser!, withError error: Error!) {
+        if let error = error {
+            print(error)
+            return
+        }
+        
+        guard let authentication = user.authentication else { return }
+        let credential = FIRGoogleAuthProvider.credential(
+            withIDToken: authentication.idToken,
+            accessToken: authentication.accessToken
+        )
+        
+        FIRAuth.auth()?.signIn(with: credential) { (user, error) in
+            
+        }
+    }
     
+    
+    func sign(_ signIn: GIDSignIn!, didDisconnectWith user: GIDGoogleUser!, withError error: Error!) {
+        print("ログイン成功 \(user.profile)")
+    }
+}
+
+
+extension ViewController: GIDSignInUIDelegate {
+
 }
 
